@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using MidiJack;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class MIDI_Input : MonoBehaviour
 {
+    public AudioHelm.HelmController helmController;
+
     public NoteFlashView notesController;
 
     public FlashCardController cardController;
@@ -28,7 +31,19 @@ public class MIDI_Input : MonoBehaviour
 
     public NoteDodgerController dodgerController;
 
-    public ScaleLoop conductor;
+    private void Start()
+    {
+        if (lineSwitcherController)
+        {
+            lineSwitcherController.noteOn.AddListener (Listener);
+            EnemyNote.noteOn.AddListener (Listener);
+        }
+    }
+
+    void Listener(int note, float velocity)
+    {
+        helmController.NoteOn(note, velocity, .75f);
+    }
 
     public void NoteOn(MidiChannel channel, int note, float velocity)
     {
@@ -56,8 +71,13 @@ public class MIDI_Input : MonoBehaviour
         if (scaleClimbController) scaleClimbController.PlayNote(note);
         if (crossyStaffController) crossyStaffController.PlayNote(note);
         if (dodgerController) dodgerController.PlayNote(note);
-        if (!lineSwitcherController && !catcherController)
-            conductor.PlayNote(note);
+        if (lineSwitcherController)
+        {
+            if (!lineSwitcherController.rhythmShootMode)
+                helmController.NoteOn(note, velocity);
+        }
+        else
+            helmController.NoteOn(note, velocity);
     }
 
     void NoteOff(MidiChannel channel, int note)
@@ -65,6 +85,8 @@ public class MIDI_Input : MonoBehaviour
         // Debug.Log("NoteOff: " + channel + "," + note);
         if (notesController) notesController.NoteOff(note);
         if (scaleClimbController) scaleClimbController.NoteOff(note);
+
+        helmController.NoteOff (note);
     }
 
     void OnEnable()

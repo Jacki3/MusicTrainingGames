@@ -1,17 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-//TO DO:
-//ADD Level Mode: get 10 in a row/in total to complete each level (duolingo style)
-//collect all wrong answers to show after each level complete
-//SCROLL MODE + MULTIPLE NOTES ON STAFF (SPAWN MULTIS)
-//record scores/streaks to let users know they beat their highest streak and/or score
-//++leaderboards!
-//choice list should slide out (later UI tweaks)
 public class FlashCardController : MonoBehaviour
 {
     [Header("Game Settings")]
@@ -110,17 +104,6 @@ public class FlashCardController : MonoBehaviour
                 successColour = Color.green;
             }
             ShowNextNote();
-
-            //(when the game starts for the first time and scale mode is active any notes above the octave will be + 12 so users MUST play the correct note relative to octave)
-            if (system.usingScaleMode)
-            {
-                int endOfScale = system.allNotes.IndexOf(11); //final note before new octave
-                if (endOfScale < 0) endOfScale = system.allNotes.IndexOf(10);
-                for (int i = endOfScale + 1; i < system.allNotes.Count; i++)
-                {
-                    system.allNotes[i] = system.allNotes[i] + 12;
-                }
-            }
         }
 
         if (gameStarted)
@@ -170,37 +153,24 @@ public class FlashCardController : MonoBehaviour
 
     public void PlayNote(int note)
     {
-        keyboardStickers[note - startMIDINumber].enabled = true;
-
-        if (system.allNotes.Count > 0 && !GameOver())
+        if (system.allNotes.Count > 0 && !GameOver() && gameStarted)
         {
             int actualNote = system.allNotes[system.currentNote];
 
             if (note == actualNote + startMIDINumber)
             {
                 Camera.main.backgroundColor = Color.green;
-                t = 0; //lerps the colour back
+                t = 0; //starts lerping the colour back
 
                 totalCorrect++;
                 streakScore++;
                 guessesCurrentNote = 0;
 
-                //deprecated; line mode is meh
-                if (lineMode)
-                {
-                    sharpStaffLines[system.allNotes[system.currentNote]]
-                        .GetComponent<SpriteRenderer>()
-                        .color = defaultLineColor;
-                    flatStaffLines[system.allNotes[system.currentNote]]
-                        .GetComponent<SpriteRenderer>()
-                        .color = defaultLineColor;
-                }
-
                 ShowNextNote();
             }
             else
             {
-                //Shows the correct answer on fail - can be done with a set number of fails
+                //Shows the correct answer with a set number of fails
                 guessesCurrentNote++;
                 if (guessesCurrentNote >= guessesToHint)
                     keyboardStickers[system.allNotes[system.currentNote]]
@@ -225,7 +195,7 @@ public class FlashCardController : MonoBehaviour
 
         noteText.text = system.currentNoteString;
 
-        //UPDATE THIS: duplicate code (remove line mode after GIT upload)
+        //UPDATE THIS: duplicate code (remove line mode after GIT upload)?
         if (system.usingSharpScale)
         {
             noteObj.transform.position =
@@ -273,24 +243,14 @@ public class FlashCardController : MonoBehaviour
             noteText.color = system.currentNoteColour;
             noteObj.GetComponent<SpriteRenderer>().color =
                 system.currentNoteColour;
+            noteObj
+                .GetComponent<SpriteRenderer>()
+                .material
+                .SetColor("_EmissionColor", system.currentNoteColour);
         }
 
         var tempNoteObj = noteObj.transform.rotation; // sets the note upsidedown if need be (there is a cleaner way to do this)
-        if (
-            system.allNotes[system.currentNote] >= 11 ||
-            flatStaffPositions[system.allNotes[system.currentNote]]
-                .name
-                .Contains("^") ||
-            sharpStaffPositions[system.allNotes[system.currentNote]]
-                .name
-                .Contains("^") ||
-            flatStaffPositions[system.allNotes[system.currentNote]]
-                .name
-                .Contains("B") ||
-            sharpStaffPositions[system.allNotes[system.currentNote]]
-                .name
-                .Contains("B")
-        )
+        if (system.allNotes[system.currentNote] >= 11)
         {
             noteObj.GetComponent<SpriteRenderer>().flipX = true;
             noteObj.GetComponent<SpriteRenderer>().flipY = true;
@@ -302,35 +262,64 @@ public class FlashCardController : MonoBehaviour
         }
         noteObj.transform.transform.rotation = tempNoteObj;
 
-        //handling simple ledger lines (needs to accomidate for scales as c will still give ledger even though it is not in middle on staff!) ~ could be cleaner
+        var ledgerLine = noteObj.transform.GetChild(0);
+
+        //handling simple ledger lines ~ could be cleaner
         switch (system.allNotes[system.currentNote])
         {
-            case 0:
+            case 20:
+                if (!system.usingSharpScale)
+                {
+                    ledgerLine = noteObj.transform.GetChild(0);
+                    if (ledgerLine.transform.localPosition.x < 0)
+                        ledgerLine.transform.localPosition *= -1;
+                    ledgerLine.gameObject.SetActive(true);
+                }
+                break;
             case 21:
-                noteObj.transform.GetChild(0).gameObject.SetActive(true);
+            case 22:
+                if (system.usingSharpScale)
+                {
+                    if (ledgerLine.transform.localPosition.x < 0)
+                        ledgerLine.transform.localPosition *= -1;
+                    ledgerLine.gameObject.SetActive(true);
+                }
+                else
+                {
+                    noteObj.transform.GetChild(1).gameObject.SetActive(true);
+                }
                 break;
             case 23:
                 noteObj.transform.GetChild(1).gameObject.SetActive(true);
                 break;
-            case 22:
-                if (noteText.text.Contains("#"))
-                    noteObj.transform.GetChild(0).gameObject.SetActive(true);
-                else
-                    noteObj.transform.GetChild(1).gameObject.SetActive(true);
-                break;
-            case 20:
-                if (noteText.text.Contains("b"))
-                    noteObj.transform.GetChild(0).gameObject.SetActive(true);
+            case 0:
+            case 1:
+                if (!system.currentNoteString.Contains("b"))
+                {
+                    ledgerLine = noteObj.transform.GetChild(0);
+                    if (ledgerLine.transform.localPosition.x > 0)
+                        ledgerLine.transform.localPosition *= -1;
+                    ledgerLine.gameObject.SetActive(true);
+                }
                 break;
         }
 
-        if (system.currentNoteString.Contains("#"))
+        //if there is a sharp or flat then determine which one and show the enharmonic sprite
+        if (
+            system
+                .sharpsAndFlats
+                .Contains(system.allNotes[system.currentNote]) &&
+            !system.usingScaleMode
+        )
         {
-            enharmonicPlacement.sprite = system.sharpSymbol;
-        }
-        else if (system.currentNoteString.Contains("flat"))
-        {
-            enharmonicPlacement.sprite = system.flatSymbol;
+            if (system.usingSharpScale)
+            {
+                enharmonicPlacement.sprite = system.sharpSymbol;
+            }
+            else if (!system.usingSharpScale)
+            {
+                enharmonicPlacement.sprite = system.flatSymbol;
+            }
         }
         else
         {

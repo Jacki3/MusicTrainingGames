@@ -34,7 +34,7 @@ public class RhythmMovement : MonoBehaviour
         }
         else
         {
-            if (transform.position.x == 0)
+            if (transform.position.x == target.x)
             {
                 var tempX = transform.position;
                 tempX.x = originalPos;

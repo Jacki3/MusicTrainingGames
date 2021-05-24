@@ -87,6 +87,12 @@ public class NoteFlashView : MonoBehaviour
 
     public int startMIDINumber = 60;
 
+    public List<Toggle> staffToggles = new List<Toggle>();
+
+    public List<Toggle> staffTogglesFlats = new List<Toggle>();
+
+    public GameObject staffNoteChoices;
+
     private List<Sprite> sharpNoteImages = new List<Sprite>();
 
     private List<Sprite> flatNoteImages = new List<Sprite>();
@@ -104,7 +110,8 @@ public class NoteFlashView : MonoBehaviour
     private List<int>
         allScaleNotes = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 
-    private int[] sharpsAndFlats = { -2, 1, 3, 6, 8, 10, 13, 15, 18, 20, 22 };
+    [HideInInspector]
+    public int[] sharpsAndFlats = { -2, 1, 3, 6, 8, 10, 13, 15, 18, 20, 22 };
 
     private List<string>
         sharpScale =
@@ -183,7 +190,16 @@ public class NoteFlashView : MonoBehaviour
     //There needs to be a way to globalise this accross all games (all games should not have to write a play note function!)
     public void PlayNote(int note)
     {
-        keyboardStickers[note - startMIDINumber].enabled = true;
+        int newNote = note - startMIDINumber;
+        if (newNote >= 0 && newNote < keyboardStickers.Count)
+            keyboardStickers[newNote].enabled = true;
+    }
+
+    public void NoteOff(int note)
+    {
+        int newNote = note - startMIDINumber;
+        if (newNote >= 0 && newNote < keyboardStickers.Count)
+            keyboardStickers[newNote].enabled = false;
     }
 
     private void Start()
@@ -199,16 +215,33 @@ public class NoteFlashView : MonoBehaviour
             currentPattern = notePatterns[Random.Range(0, notePatterns.Count)];
             previousPattern = currentPattern;
         }
+
+        foreach (Toggle
+            tog
+            in
+            staffNoteChoices.GetComponentsInChildren<Toggle>()
+        )
+        {
+            if (!tog.name.Contains("Flat")) staffToggles.Add(tog);
+            if (!tog.name.Contains("Sharp")) staffTogglesFlats.Add(tog);
+        }
+
+        for (int i = 0; i < staffTogglesFlats.Count; i++)
+        {
+            if (staffTogglesFlats[i].name.Contains("Flat"))
+            {
+                int index = staffTogglesFlats.IndexOf((staffTogglesFlats[i]));
+                Toggle savedToggle = staffTogglesFlats[i];
+                staffTogglesFlats.Remove(staffTogglesFlats[i]);
+                staffTogglesFlats.Insert(index - 1, savedToggle);
+            }
+        }
     }
 
     public void HideChoices()
     {
         if (choices) choices.SetActive(false);
-    }
-
-    public void NoteOff(int note)
-    {
-        keyboardStickers[note - startMIDINumber].enabled = false;
+        foreach (Image sticker in keyboardStickers) sticker.enabled = false;
     }
 
     public void GetNewNote()
@@ -220,11 +253,42 @@ public class NoteFlashView : MonoBehaviour
             {
                 currentNote = Random.Range(0, allNotes.Count);
             }
-            if (allNotes[currentNote] == allNotes[priorNote])
+
+            //if there is a sharp or a flat
+            if (
+                sharpsAndFlats.Contains(sharpsAndFlats[currentNote]) &&
+                !usingScaleMode &&
+                allNotes.Count > 1
+            )
             {
-                if (priorNoteText.Contains("#"))
-                    usingSharpScale = false;
-                else if (priorNoteText.Contains("flat")) usingSharpScale = true;
+                //if it was the same note as before (i.e. a sharp or flat then show the opposite)
+                if (allNotes[currentNote] == allNotes[priorNote])
+                {
+                    if (priorNoteText.Contains("#"))
+                    {
+                        usingSharpScale = false;
+                        noteNames = flatScale;
+                    }
+                    else if (priorNoteText.Contains("b"))
+                    {
+                        usingSharpScale = true;
+                        noteNames = sharpScale;
+                    }
+                }
+                else
+                //if they were not the same but is a flat/sharp then detetmine the enharmonic type from the toggle list
+                {
+                    if (staffToggles[allNotes[currentNote]].isOn)
+                    {
+                        usingSharpScale = true;
+                        noteNames = sharpScale;
+                    }
+                    else if (staffTogglesFlats[allNotes[currentNote]].isOn)
+                    {
+                        usingSharpScale = false;
+                        noteNames = flatScale;
+                    }
+                }
             }
         }
         else
@@ -244,40 +308,42 @@ public class NoteFlashView : MonoBehaviour
                 (int) System.Char.GetNumericValue(currentPattern[patternIndex]);
         }
 
-        priorNote = currentNote;
         currentNoteString = noteNames[allNotes[currentNote]];
+        priorNote = currentNote;
         currentNoteColour = noteColours[allNotes[currentNote] % 12];
 
-        //Checks whether the note can also be a flat then checks whether a sharp or flat was shown before before displaying either the flat or sharp
-        if (currentNoteString.Contains("#"))
-        {
-            int dupeCount = CheckForDuplicateNotes(allNotes[currentNote]);
-
-            //there is a duplicate (I.e. a sharp and flat)
-            if (dupeCount > 1)
-                if (
-                    !priorNoteText.Contains("flat") && Random.value > .5 ||
-                    priorNoteText.Contains("#")
-                )
-                {
-                    currentNoteString =
-                        noteNames[allNotes[currentNote] + 1] + "flat";
-                }
-        }
         priorNoteText = currentNoteString;
     }
 
-    public void AddNoteToList(int note) //needs a bit of tidy (remove the comments after GIT)
+    public void AddNoteToList(int note) //enabling stickers on/off is good but shrps and flats overlap turning both on/off
     {
         if (usingScaleMode)
         {
             allNotes.Clear();
             usingScaleMode = false;
+            foreach (Image sticker in keyboardStickers) sticker.enabled = false;
+            foreach (Toggle staffToggle in staffToggles)
+            staffToggle.GetComponentInChildren<Image>().color = Color.black;
+            foreach (Toggle staffToggleFlat in staffTogglesFlats)
+            staffToggleFlat.GetComponentInChildren<Image>().color = Color.black;
+
+            foreach (Image enHarmonicSymbol in enHarmonicPlaces)
+            enHarmonicSymbol.enabled = false;
         }
 
-        //Need a way to ensure that if I click on 'c#' it hides 'c' and vise versa
         var currentToggle =
             eSystem.currentSelectedGameObject.GetComponent<Toggle>();
+
+        if (currentToggle.name == "Flat")
+        {
+            usingSharpScale = false;
+            noteNames = flatScale;
+        }
+        else if (currentToggle.name == "Sharp")
+        {
+            usingSharpScale = true;
+            noteNames = sharpScale;
+        }
 
         if (currentToggle.isOn)
         {
@@ -285,80 +351,17 @@ public class NoteFlashView : MonoBehaviour
             currentToggle.GetComponentInChildren<Image>().color =
                 noteColours[note % 12];
 
-            // if (currentToggle.name.Contains("♭"))
-            // {
-            //     //add flat symbol to next available spot on flatPos spawns
-            //     // SetEnHarmonicSymbols(true, flatSymbol);
-            //     // allNotes.Remove(note + 1);
-            //     currentToggle
-            //         .transform
-            //         .parent
-            //         .transform
-            //         .parent
-            //         .GetComponent<Toggle>()
-            //         .interactable = false;
-            //     //if flat is chosen, no sharps allowed (can't mix and match on staff)
-            //     // SetEnHarmonicToggles("♯", false);
-            //     noteNames = flatScale;
-            //     usingSharpScale = false;
-            // }
-            // else if (currentToggle.name.Contains("♯"))
-            // {
-            //     //add sharp symbol to next available spot on sharpPos spawns
-            //     // SetEnHarmonicSymbols(true, sharpSymbol);
-            //     // allNotes.Remove(note - 1);
-            //     currentToggle
-            //         .transform
-            //         .parent
-            //         .transform
-            //         .parent
-            //         .GetComponent<Toggle>()
-            //         .interactable = false;
-            //     //if sharp is chosen, no flats allowed (can't mix and match on staff)
-            //     // SetEnHarmonicToggles("♭", false);
-            //     noteNames = sharpScale;
-            //     usingSharpScale = true;
-            // }
-            // else
-            // currentToggle.transform.GetChild(0).gameObject.SetActive(true);
+            //show the note chosen on the keyboard, if the keyboard exists
+            if (keyboardStickers.Count > 0)
+                keyboardStickers[note].enabled = true;
         }
         else
         {
             allNotes.Remove (note);
 
-            // if (currentToggle.name.Contains("♭"))
-            // {
-            //     //remove flat symbol to next available spot on flatPos spawns
-            //     // SetEnHarmonicSymbols(false, null);
-            //     // allNotes.Add(note + 1);
-            //     currentToggle
-            //         .transform
-            //         .parent
-            //         .transform
-            //         .parent
-            //         .GetComponent<Toggle>()
-            //         .interactable = true;
-            //     //only do this IF all toggles which include flat symbol are NOT active
-            //     // if (CheckForEnharmonics("♭")) SetEnHarmonicToggles("♯", true);
-            // }
-            // else if (currentToggle.name.Contains("♯"))
-            // {
-            //     //remove sharp symbol to next available spot on sharpPos spawns
-            //     // SetEnHarmonicSymbols(false, null);
-            //     // allNotes.Add(note - 1);
-            //     currentToggle
-            //         .transform
-            //         .parent
-            //         .transform
-            //         .parent
-            //         .GetComponent<Toggle>()
-            //         .interactable = true;
-            //     //only do this IF all toggles which include sharp symbol are NOT active
-            //     // if (CheckForEnharmonics("♯")) SetEnHarmonicToggles("♭", true);
-            // }
-            // else
-            // currentToggle.transform.GetChild(0).gameObject.SetActive(false);
             currentToggle.GetComponentInChildren<Image>().color = Color.black;
+            if (keyboardStickers.Count > 0)
+                keyboardStickers[note].enabled = false;
         }
     }
 
@@ -398,6 +401,12 @@ public class NoteFlashView : MonoBehaviour
 
     public void GenerateScale() //bonus: add more modes
     {
+        foreach (Image sticker in keyboardStickers) sticker.enabled = false;
+        foreach (Toggle staffToggle in staffToggles)
+        staffToggle.GetComponentInChildren<Image>().color = Color.black;
+        foreach (Toggle staffToggleFlat in staffTogglesFlats)
+        staffToggleFlat.GetComponentInChildren<Image>().color = Color.black;
+
         usingScaleMode = true;
 
         var currentToggle =
@@ -495,6 +504,38 @@ public class NoteFlashView : MonoBehaviour
         }
 
         allNotes = scale;
+
+        int endOfScale = allNotes.IndexOf(11);
+        if (endOfScale < 0)
+        {
+            endOfScale = allNotes.IndexOf(10);
+            if (endOfScale < 0) endOfScale = allNotes.IndexOf(9);
+        }
+        if (endOfScale >= 0)
+        {
+            for (int i = endOfScale + 1; i < allNotes.Count; i++)
+            {
+                allNotes[i] = allNotes[i] + 12;
+            }
+        }
+
+        foreach (int note in allNotes)
+        {
+            if (keyboardStickers.Count > 0)
+                keyboardStickers[note].enabled = true;
+            if (usingSharpScale)
+            {
+                staffToggles[note].GetComponentInChildren<Image>().color =
+                    noteColours[note % 12];
+                noteNames = sharpScale;
+            }
+            else
+            {
+                staffTogglesFlats[note].GetComponentInChildren<Image>().color =
+                    noteColours[note % 12];
+                noteNames = flatScale;
+            }
+        }
     }
 
     private void SetEnHarmonicSymbols(bool activeState, Sprite symbolType)
@@ -575,101 +616,17 @@ public class NoteFlashView : MonoBehaviour
         allNotes.Add(sharpsAndFlats[i]);
     }
 
-    //####################################################################################################################//
-
-    //OLD ADD NOTE TO LIST: this version allows for both sharps and flats (which does not make much sense!)
-    // public void AddNoteToList(int note) //needs a bit of tidy (has ~repeating code)
-    // {
-    //     var currentToggle =
-    //         eSystem.currentSelectedGameObject.GetComponent<Toggle>();
-
-    //     var parentList = currentToggle.transform.parent;
-
-    //     if (currentToggle.isOn)
-    //     {
-    //         allNotes.Add (note);
-    //         int dupeCount = CheckForDuplicateNotes(note);
-
-    //         if (currentToggle.name.Contains("Flat"))
-    //         {
-    //             SetEnHarmonicToggles("#", false);
-
-    //             // if (dupeCount < 2)
-    //             // {
-    //             //     noteNames[note] = noteNames[note + 1] + "flat";
-    //             //     noteImages[note] = flatNoteImages[note];
-    //             // }
-    //         }
-    //         else if (currentToggle.name.Contains("#"))
-    //         {
-    //             SetEnHarmonicToggles("Flat", false);
-
-    //             // if (dupeCount > 1)
-    //             // {
-    //             //     noteNames[note] = noteNames[note - 1] + "#";
-    //             //     noteImages[note] = sharpNoteImages[note];
-    //             // }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         int dupeCount = CheckForDuplicateNotes(note);
-    //         if (currentToggle.name.Contains("Flat"))
-    //         {
-    //             SetEnHarmonicToggles("#", true);
-
-    //             // if (dupeCount < 2)
-    //             // {
-    //             //     noteNames[note] = noteNames[note - 1] + "#";
-    //             //     noteImages[note] = sharpNoteImages[note];
-    //             // }
-    //         }
-    //         else if (currentToggle.name.Contains("#"))
-    //         {
-    //             SetEnHarmonicToggles("Flat", true);
-
-    //             // if (dupeCount > 1)
-    //             // {
-    //             //     noteNames[note] = noteNames[note + 1] + "flat";
-    //             //     noteImages[note] = flatNoteImages[note];
-    //             // }
-    //         }
-    //         allNotes.Remove (note);
-    //     }
-    // }
-
-    // public void AddNoteToList(int note) //needs a bit of tidy (def a way to concat this stuff)
-    // {
-    //     //Need a way to ensure that if I click on 'c#' it hides 'c' and vise versa
-    //     var currentToggle =
-    //         eSystem.currentSelectedGameObject.GetComponent<Toggle>();
-    //     if (currentToggle.isOn)
-    //     {
-    //         allNotes.Add (note);
-    //         if (currentToggle.name.Contains("Flat"))
-    //         {
-    //             SetEnHarmonicToggles("#", false);
-    //             //add flat to enharmonic flat list of positions
-    //         }
-    //         else if (currentToggle.name.Contains("#"))
-    //         {
-    //             SetEnHarmonicToggles("Flat", false);
-    //             //add sharp to enharmonic sharp list of positions
-    //         }
-    //     }
-    //     else
-    //     {
-    //         if (currentToggle.name.Contains("Flat"))
-    //         {
-    //             SetEnHarmonicToggles("#", true);
-    //             //remove flat to enharmonic flat list of positions
-    //         }
-    //         else if (currentToggle.name.Contains("#"))
-    //         {
-    //             SetEnHarmonicToggles("Flat", true);
-    //             //remove sharp to enharmonic sharp list of positions
-    //         }
-    //         allNotes.Remove (note);
-    //     }
-    // }
+    public void ShowLetterChoices(Text toggleText)
+    {
+        if (!staffNoteChoices.activeSelf)
+        {
+            staffNoteChoices.SetActive(true);
+            toggleText.text = "Show Note Letters";
+        }
+        else
+        {
+            staffNoteChoices.SetActive(false);
+            toggleText.text = "Show Staff";
+        }
+    }
 }

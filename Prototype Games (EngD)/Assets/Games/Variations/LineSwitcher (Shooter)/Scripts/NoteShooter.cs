@@ -27,6 +27,7 @@ public class NoteShooter : MonoBehaviour
             transform.position,
             Quaternion.identity);
         projectile.controller = controller;
+        projectile.note = note;
         if (controller.useColour)
         {
             //sort this out

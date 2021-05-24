@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -13,27 +14,36 @@ using UnityEngine.UI;
 //slow mo rewinds to see where you went wrong or stop and highlight etc.
 //animate the colour change MORE
 //if they start to lag behind how do we keep em up? checkpoints in levels help
+//SHOULD we allow users to play with no increase in speed?
+//better/less hard coded system of increasing song speed over time?
 public class LineSwitcherController : MonoBehaviour
 {
+    [Header("Audio Helm")]
+    public AudioHelm.AudioHelmClock audioHelmClock;
+
+    public AudioHelm.SequenceGenerator sequenceGenerator;
+
+    public AudioHelm.Sequencer helmSequencer;
+
+    public GameObject[] drumMachines;
+
+    [Header("System")]
     public NoteFlashView notesController;
 
     public Conductor theConductor;
 
     public ScaleLoop keyConductor;
 
-    public NoteShooter noteObj;
-
-    public NoteProjectile enemyNote;
-
-    public ScoreGainEffect gainEffect;
-
-    public List<Transform> notePositionsSharp = new List<Transform>();
-
     public int startMIDINumber = 60;
 
-    public bool canHit = false;
+    public float score = 0;
 
+    [Header("Game Settings")]
     public bool usingRhythm = false; //AKA tap mode
+
+    public bool useColour = true;
+
+    public bool rhythmShootMode;
 
     public float spawnWait;
 
@@ -45,27 +55,40 @@ public class LineSwitcherController : MonoBehaviour
 
     public int totalLives = 3;
 
-    public float score = 0;
-
-    public TextMeshProUGUI scoreText;
-
-    public SpriteRenderer flashback;
-
-    public List<Image> hearts = new List<Image>();
-
-    public float posX;
-
-    public bool rhythmShootMode;
-
-    public GameObject speedLine;
-
     public float startingHandicap = 4;
 
     public float maxDifficultyMultiplier = 4;
 
     public int enemyNotesToMultiply = 4;
 
-    public bool useColour = true;
+    public float posX;
+
+    [Header("UI & Objects")]
+    public NoteShooter noteObj;
+
+    public NoteProjectile enemyNote;
+
+    public ScoreGainEffect gainEffect;
+
+    public TextMeshProUGUI scoreText;
+
+    public SpriteRenderer flashback;
+
+    public GameObject speedLine;
+
+    public TextMeshProUGUI correctNotesText;
+
+    public TextMeshProUGUI inCorrectNotesText;
+
+    public TextMeshProUGUI streakText;
+
+    public List<Image> hearts = new List<Image>();
+
+    public List<Transform> notePositionsSharp = new List<Transform>();
+
+    public List<Transform> notePositionsFlat = new List<Transform>();
+
+    public bool canHit = false;
 
     [HideInInspector]
     public bool gameStarted = false;
@@ -76,24 +99,41 @@ public class LineSwitcherController : MonoBehaviour
 
     private int totalEnemiesSpawned;
 
-    float time = 1;
+    [HideInInspector]
+    public int totalCorrect = 0;
 
-    bool allowMultipleSpawns = false;
+    [HideInInspector]
+    private int totalIncorrect = 0;
+
+    [HideInInspector]
+    public int streakScore = 0;
+
+    public class IntEvent : UnityEvent<int, float> { }
+
+    public IntEvent noteOn = new IntEvent();
+
+    private GameObject currentDrumMachine;
+
+    public List<Transform> currentNotePositions = new List<Transform>();
 
     public void Start()
     {
         defaultCamColor = flashback.color;
+        currentNotePositions = notePositionsSharp;
 
         StartCoroutine(StartAnimation());
+
+        audioHelmClock.bpm = theConductor.songBPM;
     }
 
     IEnumerator StartAnimation()
     {
-        int startNote = 83;
+        int startNote = startMIDINumber + 23;
 
         for (int i = 0; i < 24; i++)
         {
             PlayNote (startNote);
+            noteOn.Invoke(startNote, .1f);
             startNote--;
             yield return new WaitForSeconds(.03f);
         }
@@ -105,7 +145,12 @@ public class LineSwitcherController : MonoBehaviour
     {
         if (Input.GetKeyUp(KeyCode.F)) StartCoroutine(StartAnimation());
 
-        if (gameStarted) elapsedGameTime += Time.deltaTime;
+        if (gameStarted)
+        {
+            elapsedGameTime += Time.deltaTime;
+            if (!rhythmShootMode)
+                audioHelmClock.bpm = theConductor.songBPM + elapsedGameTime / 5;
+        }
 
         scoreText.text = Mathf.FloorToInt(score).ToString();
 
@@ -114,7 +159,13 @@ public class LineSwitcherController : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.Space) && notesController.allNotes.Count > 0)
         {
+            sequenceGenerator.scale = notesController.allNotes.ToArray();
+            sequenceGenerator.Generate();
             gameStarted = true;
+            if (rhythmShootMode)
+                startingHandicap = 4; //This sets the rhythm shoot mode to WHOLE notes to begin with - setting it to = 1/2; 4 = 1/4 etc. this is controlled by a global difficulty
+            else
+                startingHandicap = 1.5f; // difficulty could change this?
             notesController.HideChoices();
             spawnWait = theConductor.secPerBeat * startingHandicap;
             theConductor.lastBeat = 0;
@@ -148,16 +199,23 @@ public class LineSwitcherController : MonoBehaviour
             speedLine.transform.position = new Vector3(14.2f, 0, 1);
 
         if (usingRhythm && speedMultiplier >= 4) speedMultiplier = 4; //stuck at quarter notes if players want to tap; game is impossible otherwise
+
+        correctNotesText.text = totalCorrect.ToString();
+        inCorrectNotesText.text = totalIncorrect.ToString();
+        streakText.text = streakScore.ToString();
+
+        if (notesController.usingSharpScale)
+            currentNotePositions = notePositionsSharp;
+        else
+            currentNotePositions = notePositionsFlat;
     }
 
     public void PlayNote(int note)
     {
         var tempY = noteObj.transform.position;
-        tempY.y = notePositionsSharp[note - startMIDINumber].position.y;
+        tempY.y = currentNotePositions[note - startMIDINumber].position.y;
         noteObj.transform.position = tempY;
         noteObj.FireNoteProjectile (note);
-
-        if (!rhythmShootMode) keyConductor.PlayNote(note);
     }
 
     private IEnumerator SpawnEnemyNotes(int enemiesToSpawn)
@@ -179,7 +237,7 @@ public class LineSwitcherController : MonoBehaviour
             var newEnemy =
                 Instantiate(enemyNote,
                 new Vector3(posX,
-                    notePositionsSharp[notesController.allNotes[currentIndex]]
+                    currentNotePositions[notesController.allNotes[currentIndex]]
                         .position
                         .y,
                     1),
@@ -252,6 +310,9 @@ public class LineSwitcherController : MonoBehaviour
 
     public void RemoveLife()
     {
+        totalIncorrect++;
+        streakScore = 0;
+
         flashback.color = Color.red;
         t = 0;
         foreach (Image heart in hearts)
@@ -268,6 +329,7 @@ public class LineSwitcherController : MonoBehaviour
         float newBPM = float.Parse(value.text);
         if (newBPM > 0) theConductor.songBPM = newBPM;
         theConductor.secPerBeat = 60 / theConductor.songBPM;
+        audioHelmClock.bpm = newBPM;
     }
 
     public void UpdateRhythmToggle()
@@ -280,12 +342,23 @@ public class LineSwitcherController : MonoBehaviour
 
     public void UpdateMusicVolume()
     {
-        if (theConductor.musicSource.volume > 0)
+        if (helmSequencer.enabled)
         {
-            theConductor.musicSource.volume = 0;
+            helmSequencer.enabled = false;
+            foreach (GameObject drumMachine in drumMachines)
+            {
+                if (drumMachine.activeSelf)
+                {
+                    drumMachine.SetActive(false);
+                    currentDrumMachine = drumMachine;
+                }
+            }
         }
         else
-            theConductor.musicSource.volume = .65f;
+        {
+            helmSequencer.enabled = true;
+            currentDrumMachine.SetActive(true);
+        }
     }
 
     public void UpdateMetroVolume()
@@ -312,6 +385,13 @@ public class LineSwitcherController : MonoBehaviour
             rhythmShootMode = false;
         else
             rhythmShootMode = true;
+    }
+
+    public void RegenerateMusic()
+    {
+        if (notesController.allNotes.Count > 0)
+            sequenceGenerator.scale = notesController.allNotes.ToArray();
+        sequenceGenerator.Generate();
     }
 
     protected bool GameOver() => totalLives <= 0;

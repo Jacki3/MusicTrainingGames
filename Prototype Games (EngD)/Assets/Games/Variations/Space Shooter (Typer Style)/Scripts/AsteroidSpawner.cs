@@ -6,21 +6,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-//should we do a background?
-//TO DO:
-//particle system update deprecated code
-//TO DO LATER:
-//add on screen keyboard (adjust the whole screen for this)
-//add phrases and spawn in different patterns + different types of enemies including bonus ones which wont lose lives
-//DECIDE:
-//play negative sound on incorrect note played?
-//collect notes and return them back?
-//TRY OUT WHEN YOU CAN:
-//split screen?
-//move player ship (lerp) to the pos before firing; ensuring players SHOULD follow the pattern to execute enemies in time (bonuses will effect this though) - should enemies spawn at certain heights?
-//extra weapons such as EMP
 public class AsteroidSpawner : MonoBehaviour
 {
+    [Header("Audio Helm")]
+    public AudioHelm.AudioHelmClock audioHelmClock;
+
+    public AudioHelm.SequenceGenerator sequenceGenerator;
+
     [Header("Game Settings")]
     public bool usingNotation = true;
 
@@ -150,6 +142,7 @@ public class AsteroidSpawner : MonoBehaviour
     {
         aSource = GetComponent<AudioSource>();
         collision = playerShip.GetComponent<PlayerCollision>();
+        audioHelmClock.bpm = theConductor.songBPM;
     }
 
     private void Update()
@@ -168,23 +161,12 @@ public class AsteroidSpawner : MonoBehaviour
         {
             // spawnWait = ((theConductor.secPerBeat * 4) / noteLengths) * 2f;
             // waveWait = spawnWait * 2;
+            sequenceGenerator.scale = noteSpawner.allNotes.ToArray();
+            sequenceGenerator.Generate();
             theConductor.StartSong();
             canPlay = true;
             noteSpawner.HideChoices();
             StartCoroutine(SpawnWaves());
-            if (
-                noteSpawner.usingScaleMode //handling octaves
-            )
-            {
-                int endOfScale = noteSpawner.allNotes.IndexOf(11);
-                if (endOfScale < 0)
-                    endOfScale = noteSpawner.allNotes.IndexOf(10);
-                for (int i = endOfScale + 1; i < noteSpawner.allNotes.Count; i++
-                )
-                {
-                    noteSpawner.allNotes[i] = noteSpawner.allNotes[i] + 12;
-                }
-            }
 
             if (noteSpawner.usingSharpScale)
                 notationImages = sharpNotationImages;
@@ -348,7 +330,7 @@ public class AsteroidSpawner : MonoBehaviour
                 totalIncorrectNotes++;
                 errorAmount += 1f;
                 StartCoroutine(ResetNoteBar(.5f));
-                aSource.PlayOneShot(errorSound, .5f);
+                aSource.PlayOneShot(errorSound, 1f);
             }
         }
     }
@@ -444,11 +426,7 @@ public class AsteroidSpawner : MonoBehaviour
             waveText.text = "WAVE:\n" + waveCount;
 
             //Increase speed each wave and total enemies each odd wave
-            if (!usingRhythmBarMode && waveCount % 2 != 0)
-            {
-                asteroidCount++;
-            }
-            speedMultiplier += difficultyIncrement;
+            IncreaseDifficultyCheck();
 
             StartCoroutine(SpawnWaves());
         }
@@ -552,8 +530,7 @@ public class AsteroidSpawner : MonoBehaviour
             waveText.text = "WAVE:\n" + waveCount;
 
             //Increase speed each wave and total enemies each odd wave
-            if (!usingRhythmBarMode && waveCount % 2 != 0) asteroidCount++;
-            speedMultiplier += difficultyIncrement;
+            IncreaseDifficultyCheck();
 
             StartCoroutine(SpawnWaves());
         }
@@ -564,6 +541,13 @@ public class AsteroidSpawner : MonoBehaviour
             heart.enabled = false;
             break;
         }
+    }
+
+    public void IncreaseDifficultyCheck()
+    {
+        if (!usingRhythmBarMode && waveCount % 2 != 0) asteroidCount++;
+        speedMultiplier += difficultyIncrement;
+        audioHelmClock.bpm += difficultyIncrement * 10;
     }
 
     public void AddScore(float scoreToAdd)
@@ -582,6 +566,7 @@ public class AsteroidSpawner : MonoBehaviour
         float value = float.Parse(newBPM.text);
         if (value > 0) theConductor.songBPM = value;
         theConductor.secPerBeat = 60 / theConductor.songBPM;
+        audioHelmClock.bpm = theConductor.songBPM;
     }
 
     public void UpdateNotationSwitch()
@@ -623,11 +608,18 @@ public class AsteroidSpawner : MonoBehaviour
     public void UpdateLevelsToComplete(InputField levelsToComplete)
     {
         float value = float.Parse(levelsToComplete.text);
-        if (value <= 0)
+        if (value <= 1)
             infiniteMode = true;
         else
             infiniteMode = false;
 
         wavesToComplete = (int) value;
+    }
+
+    public void RegenerateMusic()
+    {
+        if (noteSpawner.allNotes.Count > 0)
+            sequenceGenerator.scale = noteSpawner.allNotes.ToArray();
+        sequenceGenerator.Generate();
     }
 }

@@ -19,7 +19,9 @@ public class NoteProjectile : MonoBehaviour
         //projectile being fired
         if (this.tag != "Enemy")
         {
-            float dis = controller.speedLine.transform.position.x; //no need to calculate as spawn pos is 0
+            float dis =
+                controller.speedLine.transform.position.x +
+                controller.noteObj.transform.position.x * -1; //distance from player to enemy spawn pos
             speed = dis / (controller.theConductor.secPerBeat);
         }
         else
@@ -32,7 +34,9 @@ public class NoteProjectile : MonoBehaviour
                     controller.posX - controller.speedLine.transform.position.x; //distance between spawn pos and rhythm line
             }
             else
-                dis = controller.posX;
+                dis =
+                    controller.speedLine.transform.position.x +
+                    controller.noteObj.transform.position.x * -1;
 
             speed =
                 dis /
@@ -54,7 +58,10 @@ public class NoteProjectile : MonoBehaviour
     {
         if (other.tag == "Bars" && controller.rhythmShootMode)
         {
-            float dis = controller.speedLine.transform.position.x; //no need to calculate as spawn pos is 0
+            float dis =
+                dis =
+                    controller.speedLine.transform.position.x +
+                    controller.noteObj.transform.position.x * -1;
             speed = dis / (controller.theConductor.secPerBeat);
         }
     }

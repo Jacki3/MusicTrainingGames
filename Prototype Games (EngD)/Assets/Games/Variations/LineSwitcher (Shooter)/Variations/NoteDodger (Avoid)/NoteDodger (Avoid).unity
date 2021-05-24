@@ -2498,25 +2498,25 @@ MonoBehaviour:
   flatSymbol: {fileID: 21300000, guid: 04570c7e903e05043a302b3c8d349875, type: 3}
   sharpSymbol: {fileID: 21300000, guid: 96dbcb1e7de2579499eee9fcba45f60d, type: 3}
   enHarmonicToggles:
-  - {fileID: 1932794525}
+  - {fileID: 0}
   - {fileID: 1932794515}
-  - {fileID: 1932794532}
+  - {fileID: 0}
   - {fileID: 1932794522}
-  - {fileID: 1932794531}
+  - {fileID: 0}
   - {fileID: 1932794521}
-  - {fileID: 1932794528}
+  - {fileID: 0}
   - {fileID: 1932794518}
-  - {fileID: 1932794527}
+  - {fileID: 0}
   - {fileID: 1932794517}
-  - {fileID: 1932794524}
+  - {fileID: 0}
   - {fileID: 1932794514}
-  - {fileID: 1932794523}
+  - {fileID: 0}
   - {fileID: 1932794513}
-  - {fileID: 1932794530}
+  - {fileID: 0}
   - {fileID: 1932794520}
-  - {fileID: 1932794529}
+  - {fileID: 0}
   - {fileID: 1932794519}
-  - {fileID: 1932794526}
+  - {fileID: 0}
   - {fileID: 1932794516}
   allNotes: 
   noteNames: []
@@ -2531,31 +2531,6 @@ MonoBehaviour:
   - {fileID: 402635718}
   - {fileID: 891088365}
   - {fileID: 107469559}
-  noteColours:
-  - serializedVersion: 2
-    rgba: 4278190335
-  - serializedVersion: 2
-    rgba: 4278200575
-  - serializedVersion: 2
-    rgba: 4278223871
-  - serializedVersion: 2
-    rgba: 4278231807
-  - serializedVersion: 2
-    rgba: 4278246143
-  - serializedVersion: 2
-    rgba: 4278638848
-  - serializedVersion: 2
-    rgba: 4288478976
-  - serializedVersion: 2
-    rgba: 4294943232
-  - serializedVersion: 2
-    rgba: 4290998784
-  - serializedVersion: 2
-    rgba: 4294901833
-  - serializedVersion: 2
-    rgba: 4294916434
-  - serializedVersion: 2
-    rgba: 4294901858
   usePatterns: 0
   notePatterns:
   - 042
@@ -2571,6 +2546,10 @@ MonoBehaviour:
   previousPattern: 
   keyboardStickers: []
   startMIDINumber: 60
+  staffToggles: []
+  staffTogglesFlats: []
+  staffNoteChoices: {fileID: 0}
+  sharpsAndFlats: feffffff010000000300000006000000080000000a0000000d0000000f000000120000001400000016000000
 --- !u!114 &488031944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2669,6 +2648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cea3631258642b4da49c378bddb34c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  helmController: {fileID: 0}
   notesController: {fileID: 0}
   cardController: {fileID: 0}
   shooterController: {fileID: 0}
@@ -2680,7 +2660,6 @@ MonoBehaviour:
   scaleClimbController: {fileID: 0}
   crossyStaffController: {fileID: 0}
   dodgerController: {fileID: 488031944}
-  conductor: {fileID: 1787227519}
 --- !u!1 &544520068
 GameObject:
   m_ObjectHideFlags: 0
@@ -2822,7 +2801,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d0ba985cf4e5b4f7a8e6fc91f3c0751b, type: 2}
+  - {fileID: 2100000, guid: 93048698e3699fd459b9b6e3d5e3f2ad, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7896,10 +7875,7 @@ MonoBehaviour:
   songPosInBeats: 0
   dspSongTime: 0
   musicSource: {fileID: 1545188590}
-  notes: []
-  nextIndex: 0
   oneCycleComplete: 0
-  isOnBeat: 1
   cycles: 0
   lastBeat: 0
   metronomeBeat: {fileID: 8300000, guid: 8bc8198649e12114f9395da9c0d99154, type: 3}
@@ -8857,7 +8833,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 6392ebb128bb2cf4ebefcb8049911fb0, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 0}
+  m_Color: {r: 0.4056604, g: 0.4056604, b: 0.4056604, a: 0.39215687}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -10936,116 +10912,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1932794523 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6510015722343952499, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794524 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2537862848691060214, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794525 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 9175826565239873972, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794526 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7575850468476846747, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794527 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 797786205995882092, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794528 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 51368160649931824, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794529 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7532717181011206691, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794530 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5517701782509853599, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794531 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5517701782941258433, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1932794532 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5517701782664681318, guid: 6d2d1b56fff58914e8781bf127ed567e, type: 3}
-  m_PrefabInstance: {fileID: 1932794509}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1941403812
 GameObject:
   m_ObjectHideFlags: 0
@@ -11400,7 +11266,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d0ba985cf4e5b4f7a8e6fc91f3c0751b, type: 2}
+  - {fileID: 2100000, guid: 93048698e3699fd459b9b6e3d5e3f2ad, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -1,0 +1,1 @@
+Flash cards/cues; users are shown a note and must play the note. There are a few different modes to choose from and notes can be spawend in groups as opposed to single items

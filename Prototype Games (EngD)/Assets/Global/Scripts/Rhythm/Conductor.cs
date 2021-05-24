@@ -16,13 +16,7 @@ public class Conductor : MonoBehaviour
 
     public AudioSource musicSource;
 
-    public float[] notes = { 1f, 2f, 3f, 4f, 5f, 6f };
-
-    public int nextIndex = 0;
-
     public bool oneCycleComplete = false;
-
-    public bool isOnBeat = true;
 
     public int cycles = 0;
 

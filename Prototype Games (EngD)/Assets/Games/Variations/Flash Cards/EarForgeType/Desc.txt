@@ -1,0 +1,1 @@
+Similar to Flash Cards except in a circle with the potential to have a timer mode. This games also has a rhythm version in which notes are shown at points on a circle and must be played in time when the 'beat line' collides with the note

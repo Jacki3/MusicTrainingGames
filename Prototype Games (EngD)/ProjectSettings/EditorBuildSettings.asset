@@ -12,7 +12,8 @@ EditorBuildSettings:
     path: Assets/Games/Variations/LineSwitcher (Shooter)/Variations/CrossyStaff/CrossyStaff.unity
     guid: a592d5d674f10dc42bce09e5b1027741
   - enabled: 0
-    path: Assets/Games/Variations/Flash Cards/SonarBeat/CircleBeats.unity
+    path: Assets/Games/Variations/Flash Cards/EarForgeType/SonarBeat/CircleBeats
+      (Deprecated).unity
     guid: cc1eca2c33cf2be42869815f19119c60
   - enabled: 0
     path: Assets/Games/Variations/Flash Cards/FlashCards.unity

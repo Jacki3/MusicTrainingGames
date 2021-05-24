@@ -140,13 +140,12 @@ public class NoteDodgerController : MonoBehaviour
         if (speedMultiplier < maxDiffMultiplier && !usingRhythm)
             speedMultiplier = 1 + elapsedGameTime / doubleSpeedTime;
 
-        if (noteObj.GetComponent<RhythmDetector>().canHit)
-        {
-            canHit = true;
-        }
-        else
-            canHit = false;
-
+        // if (noteObj.GetComponent<RhythmDetector>().canHit)
+        // {
+        //     canHit = true;
+        // }
+        // else
+        //     canHit = false;
         flashBackground.color =
             Color.Lerp(flashBackground.color, defaultCamColor, t);
         if (t < 1) t += Time.deltaTime / 10;
